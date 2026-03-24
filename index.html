@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Diamonds of Amazonia - Vercel + Supabase</title>
+  <title>Diamonds of Amazonia</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
@@ -13,10 +13,25 @@
       --blood-red: #8b0000;
       --water-blue: #00fbff;
     }
+
     * { box-sizing: border-box; }
-    body { margin: 0; font-family: Garamond, serif; background: #000; overflow: hidden; }
-    .screen { height: 100vh; display: flex; justify-content: center; align-items: center; }
+
+    body {
+      margin: 0;
+      font-family: Garamond, serif;
+      background: #000;
+      overflow: hidden;
+    }
+
+    .screen {
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
     .hidden { display: none !important; }
+
     .pirate-panel, .shop-card {
       background: var(--parchment);
       color: black;
@@ -26,89 +41,396 @@
       box-shadow: 0 0 20px #000;
       background-image: url('https://www.transparenttextures.com/patterns/old-map.png');
     }
-    .pirate-panel { width: 420px; text-align: center; }
-    #game-container { display: flex; width: 100vw; height: 100vh; background: #2f4f4f; }
+
+    .pirate-panel {
+      width: 420px;
+      text-align: center;
+    }
+
+    #game-container {
+      display: flex;
+      width: 100vw;
+      height: 100vh;
+      background: #2f4f4f;
+    }
+
     .sidebar {
-      width: 350px; background: rgba(11,26,16,0.95); color: white; border-right: 2px solid var(--pirate-gold);
-      padding: 15px; display: flex; flex-direction: column; z-index: 10; overflow-y: auto;
+      width: 350px;
+      background: rgba(11,26,16,0.95);
+      color: white;
+      border-right: 2px solid var(--pirate-gold);
+      padding: 15px;
+      display: flex;
+      flex-direction: column;
+      z-index: 10;
+      overflow-y: auto;
     }
-    .sidebar h2 { text-align: center; color: var(--pirate-gold); margin-bottom: 15px; }
-    .stat-table { width: 100%; border-collapse: collapse; margin-bottom: 12px; }
-    .stat-table th, .stat-table td { border: 1px solid var(--pirate-gold); padding: 8px; text-align: left; font-size: 0.9em; }
-    .stat-table th { color: var(--pirate-gold); text-transform: uppercase; }
-    .map-wrapper { flex-grow: 1; position: relative; overflow: hidden; }
-    .main-map-img { width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
-    #path-svg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 2; }
-    .trail-line { stroke: var(--pirate-gold); stroke-width: 4; stroke-dasharray: 10; opacity: 0.75; }
+
+    .sidebar h2 {
+      text-align: center;
+      color: var(--pirate-gold);
+      margin-bottom: 15px;
+    }
+
+    .stat-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 12px;
+    }
+
+    .stat-table th,
+    .stat-table td {
+      border: 1px solid var(--pirate-gold);
+      padding: 8px;
+      text-align: left;
+      font-size: 0.9em;
+    }
+
+    .stat-table th {
+      color: var(--pirate-gold);
+      text-transform: uppercase;
+    }
+
+    .map-wrapper {
+      flex-grow: 1;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .main-map-img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      pointer-events: none;
+    }
+
+    #path-svg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    .trail-line {
+      stroke: var(--pirate-gold);
+      stroke-width: 4;
+      stroke-dasharray: 10;
+      opacity: 0.75;
+    }
+
     .node {
-      position: absolute; width: 32px; height: 32px; background: rgba(0,0,0,0.6); border: 2px solid var(--pirate-gold); border-radius: 50%;
-      cursor: pointer; transform: translate(-50%, -50%); display: flex; align-items: center; justify-content: center; font-weight: bold;
-      font-size: 11px; color: white; z-index: 5; transition: .18s ease; box-shadow: 0 0 0 rgba(255,215,0,0);
+      position: absolute;
+      width: 32px;
+      height: 32px;
+      background: rgba(0,0,0,0.6);
+      border: 2px solid var(--pirate-gold);
+      border-radius: 50%;
+      cursor: pointer;
+      transform: translate(-50%, -50%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 11px;
+      color: white;
+      z-index: 5;
+      transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease, border-color 0.18s ease;
+      box-shadow: 0 0 0 rgba(255, 215, 0, 0);
     }
-    .node:hover { transform: translate(-50%, -50%) scale(1.12); background: rgba(40,25,0,0.9); box-shadow: 0 0 16px rgba(255,215,0,.55); }
-    .node:active { transform: translate(-50%, -50%) scale(.96); }
-    .node.selected { border-color: #00ff99; background: rgba(0,80,40,.95); box-shadow: 0 0 18px rgba(0,255,153,.8); }
-    .node.locked-preview { border-color: #4fc3ff; box-shadow: 0 0 18px rgba(79,195,255,.65); }
-    .boat-icon { position: absolute; width: 60px; z-index: 8; transition: all 1s ease-in-out; transform: translate(-50%, -50%); }
+
+    .node:hover {
+      transform: translate(-50%, -50%) scale(1.12);
+      background: rgba(40, 25, 0, 0.9);
+      box-shadow: 0 0 16px rgba(255, 215, 0, 0.55);
+    }
+
+    .node:active {
+      transform: translate(-50%, -50%) scale(0.96);
+    }
+
+    .node.selected {
+      border-color: #00ff99;
+      background: rgba(0, 80, 40, 0.95);
+      box-shadow: 0 0 18px rgba(0, 255, 153, 0.8);
+    }
+
+    .node.locked-preview {
+      border-color: #4fc3ff;
+      box-shadow: 0 0 18px rgba(79, 195, 255, 0.65);
+    }
+
+    .boat-icon {
+      position: absolute;
+      width: 60px;
+      z-index: 8;
+      transition: all 1s ease-in-out;
+      transform: translate(-50%, -50%);
+    }
+
     .modal-overlay {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 100; display: flex; justify-content: center; align-items: center; padding: 16px;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.8);
+      z-index: 100;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 16px;
     }
-    .shop-card { width: 650px; max-width: 92%; text-align: center; }
-    .shop-card table { width: 100%; margin: 10px 0; border-collapse: collapse; }
-    .shop-card td { padding: 8px; }
+
+    .shop-card {
+      width: 650px;
+      max-width: 92%;
+      text-align: center;
+    }
+
+    .shop-card table {
+      width: 100%;
+      margin: 10px 0;
+      border-collapse: collapse;
+    }
+
+    .shop-card td {
+      padding: 8px;
+    }
+
     button {
-      padding: 10px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; width: 100%; margin-top: 10px;
+      padding: 10px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+      width: 100%;
+      margin-top: 10px;
     }
-    button:disabled { opacity: .5; cursor: not-allowed; }
-    .btn-confirm { background: green; color: white; }
-    .btn-cancel { background: crimson; color: white; }
-    input, select { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #777; border-radius: 8px; }
-    .shop-card input { width: 90px; text-align: center; }
-    #intel-area { background: rgba(0,0,0,0.8); border: 1px solid red; padding: 10px; border-radius: 8px; margin-top: auto; }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-confirm {
+      background: green;
+      color: white;
+    }
+
+    .btn-cancel {
+      background: crimson;
+      color: white;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      border: 1px solid #777;
+      border-radius: 8px;
+    }
+
+    .shop-card input {
+      width: 90px;
+      text-align: center;
+    }
+
+    #intel-area {
+      background: rgba(0,0,0,0.8);
+      border: 1px solid red;
+      padding: 10px;
+      border-radius: 8px;
+      margin-top: auto;
+    }
+
     .persistent-admin-btn {
-      position: fixed; bottom: 15px; right: 15px; z-index: 9999; width: 45px; height: 45px; background: rgba(0,0,0,0.7);
-      border: 2px solid var(--pirate-gold); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--pirate-gold); cursor: pointer;
+      position: fixed;
+      bottom: 15px;
+      right: 15px;
+      z-index: 9999;
+      width: 45px;
+      height: 45px;
+      background: rgba(0,0,0,0.7);
+      border: 2px solid var(--pirate-gold);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--pirate-gold);
+      cursor: pointer;
     }
+
     .bc-advice-mark {
-      position: absolute; width: 42px; height: 42px; border-radius: 50%; background: #ffcc00; color: #111; font-weight: bold; font-size: 26px; display: none;
-      align-items: center; justify-content: center; transform: translate(-50%, -50%); z-index: 20; cursor: pointer; border: 3px solid #fff3a0;
-      box-shadow: 0 0 18px rgba(255,204,0,.75);
+      position: absolute;
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: #ffcc00;
+      color: #111;
+      font-weight: bold;
+      font-size: 26px;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      transform: translate(-50%, -50%);
+      z-index: 20;
+      cursor: pointer;
+      border: 3px solid #fff3a0;
+      box-shadow: 0 0 18px rgba(255, 204, 0, 0.75);
     }
-    .bc-advice-mark:hover { transform: translate(-50%, -50%) scale(1.08); }
+
+    .bc-advice-mark:hover {
+      transform: translate(-50%, -50%) scale(1.08);
+    }
+
     .clue-modal-card {
-      width: 820px; max-width: 95%; min-height: 500px; border-radius: 18px; overflow: hidden; position: relative;
-      background: linear-gradient(rgba(0,0,0,.55), rgba(0,0,0,.72)), url('clue-bg.png') center/cover no-repeat;
-      box-shadow: 0 0 30px rgba(0,0,0,.65); border: 3px solid var(--pirate-gold); color: white;
+      width: 820px;
+      max-width: 95%;
+      min-height: 500px;
+      border-radius: 18px;
+      overflow: hidden;
+      position: relative;
+      background:
+        linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.72)),
+        url('clue-bg.png') center/cover no-repeat;
+      box-shadow: 0 0 30px rgba(0,0,0,0.65);
+      border: 3px solid var(--pirate-gold);
+      color: white;
     }
-    .clue-modal-inner { padding: 24px; }
-    .clue-title { font-size: 30px; font-weight: bold; color: var(--pirate-gold); margin-bottom: 10px; }
-    .clue-sub { font-size: 15px; margin-bottom: 18px; color: #f5e7b8; }
-    .clue-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 18px 0; }
+
+    .clue-modal-inner {
+      padding: 24px;
+    }
+
+    .clue-title {
+      font-size: 30px;
+      font-weight: bold;
+      color: var(--pirate-gold);
+      margin-bottom: 10px;
+    }
+
+    .clue-sub {
+      font-size: 15px;
+      margin-bottom: 18px;
+      color: #f5e7b8;
+    }
+
+    .clue-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin: 18px 0;
+    }
+
     .clue-option {
-      background: rgba(0,0,0,.58); border: 2px solid rgba(255,215,0,.45); border-radius: 14px; padding: 14px; cursor: pointer; transition: .18s ease; min-height: 108px;
+      background: rgba(0,0,0,0.58);
+      border: 2px solid rgba(255, 215, 0, 0.45);
+      border-radius: 14px;
+      padding: 14px;
+      cursor: pointer;
+      transition: 0.18s ease;
+      min-height: 108px;
     }
-    .clue-option:hover { border-color: var(--pirate-gold); transform: translateY(-2px); background: rgba(0,0,0,.66); }
-    .clue-option input { width: auto; margin-right: 8px; transform: scale(1.15); }
-    .clue-option.disabled { opacity: .45; cursor: not-allowed; pointer-events: none; }
-    .clue-option-title { font-weight: bold; color: #fff5bf; margin-bottom: 6px; font-size: 28px; }
-    .clue-option-text { font-size: 14px; line-height: 1.4; color: #ddd; }
-    .clue-summary, .revealed-clues-box {
-      background: rgba(0,0,0,.58); border: 1px solid rgba(255,215,0,.35); border-radius: 12px; padding: 12px; margin-top: 10px; font-size: 15px;
+
+    .clue-option:hover {
+      border-color: var(--pirate-gold);
+      transform: translateY(-2px);
+      background: rgba(0,0,0,0.66);
     }
-    .clue-actions { display: flex; gap: 12px; margin-top: 16px; }
-    .clue-actions button { margin-top: 0; }
-    .clue-note { color: #ffd6d6; font-size: 14px; margin-top: 8px; }
-    .revealed-clues-title { color: var(--pirate-gold); font-size: 20px; font-weight: bold; margin-bottom: 10px; }
+
+    .clue-option input {
+      width: auto;
+      margin-right: 8px;
+      transform: scale(1.15);
+    }
+
+    .clue-option.disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
+    .clue-option-title {
+      font-weight: bold;
+      color: #fff5bf;
+      margin-bottom: 6px;
+      font-size: 28px;
+    }
+
+    .clue-option-text {
+      font-size: 14px;
+      line-height: 1.4;
+      color: #ddd;
+    }
+
+    .clue-summary,
+    .revealed-clues-box {
+      background: rgba(0,0,0,0.58);
+      border: 1px solid rgba(255,215,0,0.35);
+      border-radius: 12px;
+      padding: 12px;
+      margin-top: 10px;
+      font-size: 15px;
+    }
+
+    .clue-actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .clue-actions button {
+      margin-top: 0;
+    }
+
+    .clue-note {
+      color: #ffd6d6;
+      font-size: 14px;
+      margin-top: 8px;
+    }
+
+    .revealed-clues-title {
+      color: var(--pirate-gold);
+      font-size: 20px;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+
     .revealed-clue-item {
-      padding: 10px 12px; margin-bottom: 8px; border-radius: 10px; background: rgba(255,255,255,.06); border-left: 4px solid var(--pirate-gold); font-size: 16px; line-height: 1.5;
+      padding: 10px 12px;
+      margin-bottom: 8px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.06);
+      border-left: 4px solid var(--pirate-gold);
+      font-size: 16px;
+      line-height: 1.5;
     }
-    .admin-card { border: 2px solid #c9a400; border-radius: 12px; padding: 14px; margin-bottom: 14px; background: rgba(0,0,0,.04); text-align: left; }
-    .admin-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin-top: 12px; }
-    .save-choice-actions { display: grid; gap: 10px; }
+
+    .admin-card {
+      border: 2px solid #c9a400;
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 14px;
+      background: rgba(0,0,0,0.04);
+      text-align: left;
+    }
+
+    .admin-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .save-choice-actions {
+      display: grid;
+      gap: 10px;
+    }
   </style>
 </head>
 <body>
-  <div class="persistent-admin-btn" onclick="openAdminLogin()" title="Admin Access"><i class="fas fa-user-shield"></i></div>
+  <div class="persistent-admin-btn" onclick="openAdminLogin()" title="Admin Access">
+    <i class="fas fa-user-shield"></i>
+  </div>
 
   <div id="admin-login-modal" class="modal-overlay hidden">
     <div class="pirate-panel" style="width:350px;">
@@ -162,12 +484,14 @@
   <div id="game-container" class="screen hidden">
     <aside class="sidebar">
       <h2 id="ui-full-name">----</h2>
+
       <table class="stat-table">
         <tr><th>Day</th><td><span id="ui-day">22</span>/22</td></tr>
         <tr><th>Gold</th><td><span id="ui-cash">2000</span> BR</td></tr>
         <tr><th>Diamonds</th><td><span id="ui-diamonds" style="color:var(--water-blue)">0</span></td></tr>
         <tr><th>Loc</th><td><span id="ui-loc">BC</span></td></tr>
       </table>
+
       <table class="stat-table">
         <thead><tr><th colspan="2" style="text-align:center">CARGO</th></tr></thead>
         <tr><td>🥩 Food</td><td><span id="ui-food">0</span></td></tr>
@@ -175,12 +499,14 @@
         <tr><td>⚓ Anchor</td><td><span id="ui-anchor">0</span></td></tr>
         <tr><td>⚖️ Weight</td><td><span id="ui-weight">0</span> / 1000kg</td></tr>
       </table>
+
       <div id="intel-area" class="hidden">
         <h4 style="color:red;margin:0 0 5px 0">SYSTEM FORECAST</h4>
         <div id="intel-details" style="font-size:.85em;line-height:1.4;margin-bottom:10px"></div>
         <button id="confirm-btn" class="btn-confirm" onclick="executeMovement()">CONFIRM MOVEMENT</button>
       </div>
     </aside>
+
     <main class="map-wrapper" id="map-wrapper">
       <img src="map.png" class="main-map-img" alt="Map">
       <svg id="path-svg"></svg>
@@ -192,15 +518,19 @@
   <div id="mining-modal" class="modal-overlay hidden">
     <div class="shop-card">
       <h2 style="color:var(--blood-red)"><i class="fas fa-gem"></i> DIAMOND VALLEY</h2>
+
       <div id="mining-step-1">
         <p>Days to mine? (5 Diamonds/Day)</p>
         <input type="number" id="mining-days-input" value="1" min="1">
         <button onclick="previewMining()" style="background:black;color:white">PREVIEW FORECAST</button>
       </div>
+
       <div id="mining-step-2" class="hidden">
         <div style="max-height:200px;overflow-y:auto;margin:10px 0;border:1px solid #5d4037">
           <table class="stat-table" style="color:black;width:100%;margin:0">
-            <thead style="background:var(--pirate-gold)"><tr><th>Day</th><th>Weather</th><th>Cost</th></tr></thead>
+            <thead style="background:var(--pirate-gold)">
+              <tr><th>Day</th><th>Weather</th><th>Cost</th></tr>
+            </thead>
             <tbody id="mining-log-body"></tbody>
           </table>
         </div>
@@ -215,14 +545,22 @@
     <div class="clue-modal-card">
       <div class="clue-modal-inner">
         <div class="clue-title">Mystery Clue</div>
-        <div class="clue-sub">Choose clue numbers. Each selected number costs <b>1 day</b>. The clue text will be shown only after you press <b>CONFIRM</b>.</div>
+        <div class="clue-sub">
+          Choose clue numbers. Each selected number costs <b>1 day</b>.
+          The clue text will be shown only after you press <b>CONFIRM</b>.
+        </div>
+
         <div class="clue-grid" id="clue-options-wrap"></div>
+
         <div class="clue-summary" id="clue-summary-box">Selected: 0 clue(s) • Days Cost: 0</div>
+
         <div class="clue-note" id="clue-note-box"></div>
+
         <div class="clue-actions">
           <button class="btn-confirm" onclick="confirmClues()">CONFIRM</button>
           <button class="btn-cancel" onclick="closeClueModal()">CLOSE</button>
         </div>
+
         <div id="revealed-clues-box" class="revealed-clues-box hidden">
           <div class="revealed-clues-title">Revealed Clue</div>
           <div id="revealed-clues-list"></div>
@@ -231,515 +569,789 @@
     </div>
   </div>
 
-<script>
-// 1) PUT YOUR SUPABASE VALUES HERE
-const SUPABASE_URL = "PASTE_YOUR_SUPABASE_URL_HERE";
-const SUPABASE_ANON_KEY = "PASTE_YOUR_SUPABASE_ANON_KEY_HERE";
-const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  <script>
+    const SUPABASE_URL = "https://ztlgapixabpizzinegyb.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp0bGdhcGl4YWJwaXp6aW5lZ3liIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzNDIyNjcsImV4cCI6MjA4OTkxODI2N30.2OUlDdM0Lt8kx1uuCUTTH9JKKCg_ftYqgmtLsUycYac";
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-const mapData = {
-  'AN': { x: 25, y: 43, adj: ['W2', 'R14', 'R12', 'R10', 'R8', 'R9', 'R11', 'R13'] },
-  'BC': { x: 88, y: 76, type: 'B', adj: ['R1', 'R2'] },
-  'DM': { x: 15, y: 15, type: 'D', adj: ['R15', 'R14'] },
-  'H1': { x: 70, y: 20, type: 'H', adj: ['R2', 'R3', 'R4', 'W1', 'R7'] },
-  'H2': { x: 58, y: 82, type: 'H', adj: ['R6', 'R5', 'R4', 'R1'] },
-  'H3': { x: 43, y: 92, type: 'H', adj: ['H4', 'R9', 'R5', 'H2'] },
-  'H4': { x: 33, y: 73, type: 'H', adj: ['H5', 'R11', 'R9', 'R6', 'H3'] },
-  'H5': { x: 12, y: 65, type: 'H', adj: ['R13', 'AN', 'R11', 'H4'] },
-  'R1': { x: 74, y: 72, adj: ['H2', 'R5', 'R4', 'R3', 'R2', 'BC'] },
-  'R2': { x: 91, y: 55, adj: ['BC', 'R1', 'R3', 'H1'] },
-  'R3': { x: 81, y: 46, adj: ['R2', 'R1', 'R4', 'H1'] },
-  'R4': { x: 70, y: 46, adj: ['H1', 'R3', 'R1', 'R5', 'W1'] },
-  'R5': { x: 53, y: 55, adj: ['H2', 'R6', 'R9', 'R8', 'W1', 'R4', 'R1'] },
-  'R6': { x: 45, y: 73, adj: ['H3', 'H4', 'R9', 'R5', 'H2'] },
-  'R7': { x: 55, y: 15, adj: ['H1', 'W1', 'R8', 'R10'] },
-  'R8': { x: 51, y: 40, adj: ['W1', 'R5', 'R9', 'AN', 'R10', 'R7'] },
-  'R9': { x: 43, y: 52, adj: ['R8', 'R5', 'R6', 'H4', 'R11', 'AN'] },
-  'R10': { x: 47, y: 25, adj: ['R7', 'R8', 'AN', 'R12'] },
-  'R11': { x: 31, y: 60, adj: ['AN', 'R9', 'H4', 'H5', 'R13', 'W2'] },
-  'R12': { x: 34, y: 25, adj: ['R10', 'W2', 'R14', 'AN'] },
-  'R13': { x: 9, y: 45, adj: ['R15', 'W2', 'AN', 'R11', 'H5'] },
-  'R14': { x: 24, y: 20, adj: ['R12', 'AN', 'R13', 'R15', 'DM'] },
-  'R15': { x: 8, y: 25, adj: ['DM', 'R14', 'W2', 'R13'] },
-  'W1': { x: 63, y: 38, type: 'W', adj: ['H1', 'R4', 'R5', 'R8', 'R7'] },
-  'W2': { x: 16, y: 38, type: 'W', adj: ['R14', 'AN', 'R13', 'R15', 'R12'] }
-};
+    const mapData = {
+      'AN':  { x: 25, y: 43, adj: ['W2', 'R14', 'R12', 'R10', 'R8', 'R9', 'R11', 'R13'] },
+      'BC':  { x: 88, y: 76, type: 'B', adj: ['R1', 'R2'] },
+      'DM':  { x: 15, y: 15, type: 'D', adj: ['R15', 'R14'] },
+      'H1':  { x: 70, y: 20, type: 'H', adj: ['R2', 'R3', 'R4', 'W1', 'R7'] },
+      'H2':  { x: 58, y: 82, type: 'H', adj: ['R6', 'R5', 'R4', 'R1'] },
+      'H3':  { x: 43, y: 92, type: 'H', adj: ['H4', 'R9', 'R5', 'H2'] },
+      'H4':  { x: 33, y: 73, type: 'H', adj: ['H5', 'R11', 'R9', 'R6', 'H3'] },
+      'H5':  { x: 12, y: 65, type: 'H', adj: ['R13', 'AN', 'R11', 'H4'] },
+      'R1':  { x: 74, y: 72, adj: ['H2', 'R5', 'R4', 'R3', 'R2', 'BC'] },
+      'R2':  { x: 91, y: 55, adj: ['BC', 'R1', 'R3', 'H1'] },
+      'R3':  { x: 81, y: 46, adj: ['R2', 'R1', 'R4', 'H1'] },
+      'R4':  { x: 70, y: 46, adj: ['H1', 'R3', 'R1', 'R5', 'W1'] },
+      'R5':  { x: 53, y: 55, adj: ['H2', 'R6', 'R9', 'R8', 'W1', 'R4', 'R1'] },
+      'R6':  { x: 45, y: 73, adj: ['H3', 'H4', 'R9', 'R5', 'H2'] },
+      'R7':  { x: 55, y: 15, adj: ['H1', 'W1', 'R8', 'R10'] },
+      'R8':  { x: 51, y: 40, adj: ['W1', 'R5', 'R9', 'AN', 'R10', 'R7'] },
+      'R9':  { x: 43, y: 52, adj: ['R8', 'R5', 'R6', 'H4', 'R11', 'AN'] },
+      'R10': { x: 47, y: 25, adj: ['R7', 'R8', 'AN', 'R12'] },
+      'R11': { x: 31, y: 60, adj: ['AN', 'R9', 'H4', 'H5', 'R13', 'W2'] },
+      'R12': { x: 34, y: 25, adj: ['R10', 'W2', 'R14', 'AN'] },
+      'R13': { x: 9,  y: 45, adj: ['R15', 'W2', 'AN', 'R11', 'H5'] },
+      'R14': { x: 24, y: 20, adj: ['R12', 'AN', 'R13', 'R15', 'DM'] },
+      'R15': { x: 8,  y: 25, adj: ['DM', 'R14', 'W2', 'R13'] },
+      'W1':  { x: 63, y: 38, type: 'W', adj: ['H1', 'R4', 'R5', 'R8', 'R7'] },
+      'W2':  { x: 16, y: 38, type: 'W', adj: ['R14', 'AN', 'R13', 'R15', 'R12'] }
+    };
 
-const clueList = [
-  { id: 'c1', number: '01', text: '"Anaconda Jungle is safe at times"' },
-  { id: 'c2', number: '02', text: '"Fear Not. Make your Moves Bolder"' },
-  { id: 'c3', number: '03', text: '"Stay over for More Diamonds"' },
-  { id: 'c4', number: '04', text: '"Use the Water Eco System"' }
-];
+    const clueList = [
+      { id: 'c1', number: '01', text: '"Anaconda Jungle is safe at times"' },
+      { id: 'c2', number: '02', text: '"Fear Not. Make your Moves Bolder"' },
+      { id: 'c3', number: '03', text: '"Stay over for More Diamonds"' },
+      { id: 'c4', number: '04', text: '"Use the Water Eco System"' }
+    ];
 
-const ADMIN_USER = 'admin';
-const ADMIN_PASS = '1234';
-const MAX_WEIGHT = 1000;
-let currentTeamId = null;
-let foundSavedGame = null;
-let pendingMin = null;
+    const ADMIN_USER = 'admin';
+    const ADMIN_PASS = '1234';
+    const MAX_WEIGHT = 1000;
 
-function getFreshState() {
-  return {
-    current: 'BC', target: null, days: 22, diamonds: 0, cash: 2000,
-    inv: { food: 0, fuel: 0, anchor: 0 },
-    pendingCost: null, pendingWeather: null, locationWeatherByDay: {}, takenClues: [],
-    teamId: null, teamName: '', captainName: '', gameEnded: false
-  };
-}
-let state = getFreshState();
+    let currentTeamId = null;
+    let foundSavedGame = null;
+    let pendingMin = null;
 
-async function saveGameToDatabase() {
-  if (!state.teamId) return;
-  const payload = {
-    team_id: state.teamId,
-    team_name: state.teamName,
-    captain_name: state.captainName,
-    current_location: state.current,
-    days: state.days,
-    diamonds: state.diamonds,
-    cash: state.cash,
-    food: state.inv.food,
-    fuel: state.inv.fuel,
-    anchor: state.inv.anchor,
-    taken_clues: state.takenClues,
-    game_ended: state.gameEnded
-  };
-  const { error } = await supabaseClient.from('game_saves').upsert(payload, { onConflict: 'team_id' });
-  if (error) console.error('Save failed', error);
-}
+    function getFreshState() {
+      return {
+        current: 'BC',
+        target: null,
+        days: 22,
+        diamonds: 0,
+        cash: 2000,
+        inv: { food: 0, fuel: 0, anchor: 0 },
+        pendingCost: null,
+        pendingWeather: null,
+        locationWeatherByDay: {},
+        takenClues: [],
+        teamId: null,
+        teamName: '',
+        captainName: '',
+        gameEnded: false
+      };
+    }
 
-async function loadTeamFromDatabase(teamId) {
-  const { data, error } = await supabaseClient.from('game_saves').select('*').eq('team_id', teamId).maybeSingle();
-  if (error) throw error;
-  return data;
-}
+    let state = getFreshState();
 
-function applyDbRowToState(data) {
-  state = {
-    ...getFreshState(),
-    teamId: data.team_id,
-    teamName: data.team_name || '',
-    captainName: data.captain_name || '',
-    current: data.current_location || 'BC',
-    days: data.days ?? 22,
-    diamonds: data.diamonds ?? 0,
-    cash: data.cash ?? 2000,
-    inv: { food: data.food ?? 0, fuel: data.fuel ?? 0, anchor: data.anchor ?? 0 },
-    takenClues: data.taken_clues || [],
-    gameEnded: data.game_ended || false
-  };
-}
+    async function saveGameToDatabase() {
+      if (!state.teamId) return;
 
-async function handleLogin() {
-  const id = document.getElementById('user-in').value.trim();
-  if (!['1','2','3','4','5','6'].includes(id)) {
-    alert('Invalid ID');
-    return;
-  }
-  currentTeamId = id;
-  try {
-    const data = await loadTeamFromDatabase(id);
-    if (data) {
-      foundSavedGame = data;
-      document.getElementById('save-choice-modal').classList.remove('hidden');
-    } else {
+      const payload = {
+        team_id: state.teamId,
+        team_name: state.teamName,
+        captain_name: state.captainName,
+        current_location: state.current,
+        days: state.days,
+        diamonds: state.diamonds,
+        cash: state.cash,
+        food: state.inv.food,
+        fuel: state.inv.fuel,
+        anchor: state.inv.anchor,
+        taken_clues: state.takenClues,
+        game_ended: state.gameEnded
+      };
+
+      const { error } = await supabaseClient
+        .from('game_saves')
+        .upsert(payload, { onConflict: 'team_id' });
+
+      if (error) {
+        console.error('Save failed', error);
+      }
+    }
+
+    async function loadTeamFromDatabase(teamId) {
+      const { data, error } = await supabaseClient
+        .from('game_saves')
+        .select('*')
+        .eq('team_id', teamId)
+        .maybeSingle();
+
+      if (error) throw error;
+      return data;
+    }
+
+    function applyDbRowToState(data) {
+      state = {
+        ...getFreshState(),
+        teamId: data.team_id,
+        teamName: data.team_name || '',
+        captainName: data.captain_name || '',
+        current: data.current_location || 'BC',
+        days: data.days ?? 22,
+        diamonds: data.diamonds ?? 0,
+        cash: data.cash ?? 2000,
+        inv: {
+          food: data.food ?? 0,
+          fuel: data.fuel ?? 0,
+          anchor: data.anchor ?? 0
+        },
+        takenClues: data.taken_clues || [],
+        gameEnded: data.game_ended || false
+      };
+    }
+
+    async function handleLogin() {
+      const id = document.getElementById('user-in').value.trim();
+
+      if (!['1','2','3','4','5','6'].includes(id)) {
+        alert('Invalid ID');
+        return;
+      }
+
+      currentTeamId = id;
+
+      try {
+        const data = await loadTeamFromDatabase(id);
+
+        if (data) {
+          foundSavedGame = data;
+          document.getElementById('save-choice-modal').classList.remove('hidden');
+        } else {
+          state = getFreshState();
+          state.teamId = id;
+          document.getElementById('login-screen').classList.add('hidden');
+          document.getElementById('reg-screen').classList.remove('hidden');
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Failed to check saved game. Check Supabase table and RLS.');
+      }
+    }
+
+    function closeSaveChoiceModal() {
+      document.getElementById('save-choice-modal').classList.add('hidden');
+      foundSavedGame = null;
+    }
+
+    function continueSavedGame() {
+      if (!foundSavedGame) return;
+
+      applyDbRowToState(foundSavedGame);
+      document.getElementById('ui-full-name').innerText = `${state.teamName} - ${state.captainName}`;
+      document.getElementById('login-screen').classList.add('hidden');
+      closeSaveChoiceModal();
+      document.getElementById('game-container').classList.remove('hidden');
+
+      renderNodes();
+      updateBoatPosition(state.current);
+      updateUI();
+      updateBCAdviceMark();
+    }
+
+    async function startNewGameOverwrite() {
+      try {
+        await supabaseClient
+          .from('game_saves')
+          .delete()
+          .eq('team_id', currentTeamId);
+      } catch (err) {
+        console.error(err);
+      }
+
       state = getFreshState();
-      state.teamId = id;
+      state.teamId = currentTeamId;
+
+      closeSaveChoiceModal();
       document.getElementById('login-screen').classList.add('hidden');
       document.getElementById('reg-screen').classList.remove('hidden');
     }
-  } catch (err) {
-    console.error(err);
-    alert('Failed to check saved game. Check Supabase URL/key and table setup.');
-  }
-}
 
-function closeSaveChoiceModal() {
-  document.getElementById('save-choice-modal').classList.add('hidden');
-  foundSavedGame = null;
-}
+    async function handleRegistration() {
+      const teamName = document.getElementById('team-name').value.trim();
+      const captainName = document.getElementById('captain-name').value.trim();
 
-function continueSavedGame() {
-  if (!foundSavedGame) return;
-  applyDbRowToState(foundSavedGame);
-  document.getElementById('ui-full-name').innerText = `${state.teamName} - ${state.captainName}`;
-  document.getElementById('login-screen').classList.add('hidden');
-  closeSaveChoiceModal();
-  document.getElementById('game-container').classList.remove('hidden');
-  renderNodes();
-  updateBoatPosition(state.current);
-  updateUI();
-  updateBCAdviceMark();
-}
+      if (!teamName || !captainName) {
+        alert('Enter vessel name and captain name');
+        return;
+      }
 
-async function startNewGameOverwrite() {
-  try {
-    await supabaseClient.from('game_saves').delete().eq('team_id', currentTeamId);
-  } catch (err) {
-    console.error(err);
-  }
-  state = getFreshState();
-  state.teamId = currentTeamId;
-  closeSaveChoiceModal();
-  document.getElementById('login-screen').classList.add('hidden');
-  document.getElementById('reg-screen').classList.remove('hidden');
-}
+      state = getFreshState();
+      state.teamId = currentTeamId;
+      state.teamName = teamName;
+      state.captainName = captainName;
 
-async function handleRegistration() {
-  const teamName = document.getElementById('team-name').value.trim();
-  const captainName = document.getElementById('captain-name').value.trim();
-  if (!teamName || !captainName) {
-    alert('Enter vessel name and captain name');
-    return;
-  }
-  state = getFreshState();
-  state.teamId = currentTeamId;
-  state.teamName = teamName;
-  state.captainName = captainName;
-  document.getElementById('ui-full-name').innerText = `${teamName} - ${captainName}`;
-  document.getElementById('reg-screen').classList.add('hidden');
-  document.getElementById('game-container').classList.remove('hidden');
-  renderNodes();
-  updateBoatPosition('BC');
-  updateUI();
-  updateBCAdviceMark();
-  await saveGameToDatabase();
-  openShop('B');
-}
+      document.getElementById('ui-full-name').innerText = `${teamName} - ${captainName}`;
+      document.getElementById('reg-screen').classList.add('hidden');
+      document.getElementById('game-container').classList.remove('hidden');
 
-function renderNodes() {
-  const wrapper = document.getElementById('map-wrapper');
-  document.querySelectorAll('.node').forEach(n => n.remove());
-  for (let id in mapData) {
-    const node = document.createElement('div');
-    node.className = 'node';
-    node.id = 'node-' + id;
-    node.style.left = mapData[id].x + '%';
-    node.style.top = mapData[id].y + '%';
-    node.innerText = id;
-    node.onclick = () => previewMove(id);
-    wrapper.appendChild(node);
-  }
-}
-
-function getLocationWeather(nodeId) {
-  if (!state.locationWeatherByDay[nodeId]) state.locationWeatherByDay[nodeId] = Math.random() * 100;
-  return state.locationWeatherByDay[nodeId];
-}
-function resetAllLocationWeatherForNextDay() { state.locationWeatherByDay = {}; }
-
-function getCostForWeather(roll, isWaterLocation) {
-  if (roll <= 60) return { w: 'Rainy', c: { food: isWaterLocation ? 0 : 1, fuel: 1, anchor: 0 } };
-  if (roll <= 75) {
-    return state.inv.anchor > 0
-      ? { w: 'Flood', c: { food: isWaterLocation ? 0 : 1, fuel: 2, anchor: 1 } }
-      : { w: 'Flood', c: { food: isWaterLocation ? 0 : 2, fuel: 5, anchor: 0 } };
-  }
-  if (roll <= 90) return { w: 'Sunny', c: { food: isWaterLocation ? 0 : 2, fuel: 1, anchor: 0 } };
-  return state.inv.anchor > 0
-    ? { w: 'Sunny-Flood', c: { food: isWaterLocation ? 0 : 2, fuel: 2, anchor: 1 } }
-    : { w: 'Sunny-Flood', c: { food: isWaterLocation ? 0 : 3, fuel: 5, anchor: 0 } };
-}
-
-function previewMove(id) {
-  if (state.gameEnded) return;
-  if (!mapData[state.current].adj.includes(id)) return alert('Areas are not connected!');
-  if (state.days <= 0) return alert('No days left!');
-  document.querySelectorAll('.node').forEach(n => n.classList.remove('selected', 'locked-preview'));
-  document.getElementById('node-' + id).classList.add('selected', 'locked-preview');
-  state.target = id;
-  const isWaterLocation = mapData[id].type === 'W';
-  const { w, c } = getCostForWeather(getLocationWeather(id), isWaterLocation);
-  state.pendingWeather = w;
-  state.pendingCost = c;
-  document.getElementById('intel-area').classList.remove('hidden');
-  document.getElementById('intel-details').innerHTML = `Target: <b>${id}</b><br>Forecast: <b>${w}</b><br>Cost: 🥩${c.food} | ⛽${c.fuel} | ⚓${c.anchor}`;
-  document.getElementById('confirm-btn').disabled = (state.inv.food < c.food || state.inv.fuel < c.fuel || state.inv.anchor < c.anchor);
-}
-
-async function executeMovement() {
-  if (state.gameEnded || !state.target || !state.pendingCost) return;
-  if (state.inv.food < state.pendingCost.food || state.inv.fuel < state.pendingCost.fuel || state.inv.anchor < state.pendingCost.anchor) {
-    return alert('Not enough supplies!');
-  }
-  state.inv.food -= state.pendingCost.food;
-  state.inv.fuel -= state.pendingCost.fuel;
-  state.inv.anchor -= state.pendingCost.anchor;
-  state.days -= 1;
-  drawTrail(state.current, state.target);
-  state.current = state.target;
-  updateBoatPosition(state.current);
-  document.querySelectorAll('.node').forEach(n => n.classList.remove('selected', 'locked-preview'));
-  document.getElementById('intel-area').classList.add('hidden');
-  state.target = null; state.pendingCost = null; state.pendingWeather = null;
-  resetAllLocationWeatherForNextDay();
-  updateUI();
-  updateBCAdviceMark();
-  handleArrival();
-  checkGameState();
-  await saveGameToDatabase();
-}
-
-function handleArrival() {
-  if (state.gameEnded) return;
-  const type = mapData[state.current].type;
-  if (type === 'H') openShop('H');
-  if (type === 'D') { resetMiningModal(); document.getElementById('mining-modal').classList.remove('hidden'); }
-}
-
-function openShop(type) {
-  const old = document.getElementById('shop-modal');
-  if (old) old.remove();
-  const modal = document.createElement('div');
-  modal.className = 'modal-overlay';
-  modal.id = 'shop-modal';
-  const fP = type === 'H' ? 100 : 50;
-  const fuP = type === 'H' ? 40 : 20;
-  modal.innerHTML = `
-    <div class="shop-card">
-      <h2>MARKET: ${type === 'H' ? 'HIGHLAND' : 'BASE CAMP'}</h2>
-      <p>Gold Available: <b>${state.cash} BR</b></p>
-      <table>
-        <tr><td>🥩 Food (${fP} BR)</td><td><input type="number" min="0" id="buy-f" value="${state.inv.food}" oninput="calcShop(${fP}, ${fuP})"></td></tr>
-        <tr><td>⛽ Fuel (${fuP} BR)</td><td><input type="number" min="0" id="buy-fu" value="${state.inv.fuel}" oninput="calcShop(${fP}, ${fuP})"></td></tr>
-        <tr><td>⚓ Anchor (100 BR)</td><td><input type="number" min="0" id="buy-a" value="${state.inv.anchor}" oninput="calcShop(${fP}, ${fuP})"></td></tr>
-      </table>
-      <p id="sum" style="font-weight:bold"></p>
-      <p id="warn" style="color:red; display:none;">Over budget / over capacity / invalid sale</p>
-      <button id="s-btn" onclick="confShop(${fP}, ${fuP})" style="background:green; color:white">SAVE MANIFEST</button>
-      <button onclick="closeShop()" style="background:#333; color:white;">Close</button>
-    </div>`;
-  document.body.appendChild(modal);
-  calcShop(fP, fuP);
-}
-function closeShop() { const modal = document.getElementById('shop-modal'); if (modal) modal.remove(); }
-function calcShop(fP, fuP) {
-  const f = parseInt(document.getElementById('buy-f').value) || 0;
-  const fu = parseInt(document.getElementById('buy-fu').value) || 0;
-  const a = parseInt(document.getElementById('buy-a').value) || 0;
-  const cost = ((f - state.inv.food) * fP) + ((fu - state.inv.fuel) * fuP) + ((a - state.inv.anchor) * 100);
-  const wt = (f * 50) + (fu * 10) + (a * 20);
-  document.getElementById('sum').innerText = `Gold Required: ${cost} BR | Weight: ${wt}kg | Balance: ${state.cash - cost} BR`;
-  const over = (cost < 0 || state.cash < cost || wt > MAX_WEIGHT);
-  document.getElementById('warn').style.display = over ? 'block' : 'none';
-  document.getElementById('s-btn').disabled = over;
-}
-async function confShop(fP, fuP) {
-  const f = parseInt(document.getElementById('buy-f').value) || 0;
-  const fu = parseInt(document.getElementById('buy-fu').value) || 0;
-  const a = parseInt(document.getElementById('buy-a').value) || 0;
-  const cost = ((f - state.inv.food) * fP) + ((fu - state.inv.fuel) * fuP) + ((a - state.inv.anchor) * 100);
-  const wt = (f * 50) + (fu * 10) + (a * 20);
-  if (cost < 0) return alert('Selling is not allowed');
-  if (state.cash < cost) return alert('Not enough gold');
-  if (wt > MAX_WEIGHT) return alert('Weight limit exceeded');
-  state.cash -= cost;
-  state.inv = { food: f, fuel: fu, anchor: a };
-  closeShop();
-  updateUI();
-  await saveGameToDatabase();
-}
-
-function previewMining() {
-  const days = parseInt(document.getElementById('mining-days-input').value);
-  if (days <= 0 || days >= state.days) return alert('Invalid Days count');
-  let tF = 0, tFu = 0, tA = 0, html = '', tempInv = { ...state.inv }, ok = true;
-  for (let d = 1; d <= days; d++) {
-    const { w, c } = getCostForWeather(Math.random() * 100, false);
-    tF += c.food; tFu += c.fuel; tA += c.anchor;
-    html += `<tr><td>${d}</td><td>${w}</td><td>🥩${c.food} ⛽${c.fuel} ⚓${c.anchor}</td></tr>`;
-    if (tempInv.food < c.food || tempInv.fuel < c.fuel || tempInv.anchor < c.anchor) ok = false;
-    tempInv.food -= c.food; tempInv.fuel -= c.fuel; tempInv.anchor -= c.anchor;
-  }
-  document.getElementById('mining-log-body').innerHTML = html;
-  document.getElementById('mining-total-cost').innerHTML = `Total cost: 🥩${tF} Food, ⛽${tFu} Fuel, ⚓${tA} Anchor<br>Diamonds: 💎${days * 5}`;
-  document.getElementById('mining-confirm-btn').disabled = !ok;
-  if (!ok) document.getElementById('mining-total-cost').innerHTML += `<br><span style="color:red">INSUFFICIENT SUPPLIES!</span>`;
-  pendingMin = { days, tF, tFu, tA };
-  document.getElementById('mining-step-1').classList.add('hidden');
-  document.getElementById('mining-step-2').classList.remove('hidden');
-}
-async function confirmMining() {
-  if (state.gameEnded || !pendingMin) return;
-  state.inv.food -= pendingMin.tF; state.inv.fuel -= pendingMin.tFu; state.inv.anchor -= pendingMin.tA;
-  state.days -= pendingMin.days; state.diamonds += (pendingMin.days * 5);
-  document.getElementById('mining-modal').classList.add('hidden');
-  resetMiningModal();
-  updateUI();
-  checkGameState();
-  await saveGameToDatabase();
-}
-function editMiningDays() { document.getElementById('mining-step-1').classList.remove('hidden'); document.getElementById('mining-step-2').classList.add('hidden'); }
-function resetMiningModal() {
-  pendingMin = null;
-  document.getElementById('mining-days-input').value = 1;
-  document.getElementById('mining-log-body').innerHTML = '';
-  document.getElementById('mining-total-cost').innerHTML = '';
-  document.getElementById('mining-step-1').classList.remove('hidden');
-  document.getElementById('mining-step-2').classList.add('hidden');
-}
-
-function updateBCAdviceMark() {
-  const mark = document.getElementById('bc-advice-mark'); if (!mark) return;
-  const bc = mapData['BC'];
-  mark.style.left = (bc.x + 3) + '%';
-  mark.style.top = (bc.y - 7) + '%';
-  if (state.current === 'BC' && !state.gameEnded) mark.style.display = 'flex';
-  else { mark.style.display = 'none'; closeClueModal(); }
-}
-function openClueModal() {
-  if (state.current !== 'BC' || state.gameEnded) return;
-  document.getElementById('revealed-clues-box').classList.add('hidden');
-  document.getElementById('revealed-clues-list').innerHTML = '';
-  renderClueOptions();
-  document.getElementById('clue-modal').classList.remove('hidden');
-}
-function closeClueModal() {
-  document.getElementById('clue-modal').classList.add('hidden');
-  document.getElementById('revealed-clues-box').classList.add('hidden');
-  document.getElementById('revealed-clues-list').innerHTML = '';
-}
-function renderClueOptions() {
-  const wrap = document.getElementById('clue-options-wrap'); wrap.innerHTML = '';
-  clueList.forEach(clue => {
-    const alreadyTaken = state.takenClues.includes(clue.id);
-    const item = document.createElement('label');
-    item.className = 'clue-option' + (alreadyTaken ? ' disabled' : '');
-    item.innerHTML = `<div class="clue-option-title"><input type="checkbox" class="clue-check" value="${clue.id}" ${alreadyTaken ? 'disabled' : ''}>${clue.number}</div><div class="clue-option-text">${alreadyTaken ? 'Already used' : 'Mystery clue number'}</div>`;
-    wrap.appendChild(item);
-  });
-  document.querySelectorAll('.clue-check').forEach(box => box.addEventListener('change', updateClueSummary));
-  updateClueSummary();
-}
-function updateClueSummary() {
-  const selected = [...document.querySelectorAll('.clue-check:checked')].map(x => x.value);
-  const count = selected.length;
-  const note = document.getElementById('clue-note-box');
-  document.getElementById('clue-summary-box').innerHTML = `Selected: <b>${count}</b> clue(s) • Days Cost: <b>${count}</b>`;
-  if (count === 0) note.innerText = 'Select at least one clue number to confirm.';
-  else if (state.days <= count) note.innerText = 'Not enough days remaining for this selection.';
-  else note.innerText = '';
-}
-async function confirmClues() {
-  if (state.current !== 'BC' || state.gameEnded) return;
-  const selectedIds = [...document.querySelectorAll('.clue-check:checked')].map(x => x.value);
-  const costDays = selectedIds.length;
-  if (costDays === 0) return alert('Please select at least one clue number.');
-  if (state.days <= costDays) return alert('Not enough days remaining.');
-  const selectedClues = clueList.filter(clue => selectedIds.includes(clue.id));
-  selectedIds.forEach(id => { if (!state.takenClues.includes(id)) state.takenClues.push(id); });
-  state.days -= costDays; updateUI();
-  const list = document.getElementById('revealed-clues-list'); list.innerHTML = '';
-  selectedClues.forEach(clue => {
-    const div = document.createElement('div'); div.className = 'revealed-clue-item';
-    div.innerHTML = `<b>${clue.number}</b> — ${clue.text}`; list.appendChild(div);
-  });
-  document.getElementById('revealed-clues-box').classList.remove('hidden');
-  renderClueOptions(); checkGameState();
-  await saveGameToDatabase();
-}
-
-function checkGameState() {
-  if (state.gameEnded) return;
-  if (state.current === 'BC' && state.diamonds > 0) {
-    state.gameEnded = true; closeClueModal();
-    setTimeout(() => alert(`VICTORY!\n\nYou returned to Base Camp safely.\nDiamonds Collected: ${state.diamonds}\nGold Remaining: ${state.cash} BR`), 150);
-    return;
-  }
-  if (state.days <= 0) {
-    state.gameEnded = true; closeClueModal();
-    setTimeout(() => alert(`GAME OVER!\n\nYou ran out of days.\nLocation: ${state.current}\nDiamonds Collected: ${state.diamonds}\nGold Remaining: ${state.cash} BR`), 150);
-  }
-}
-
-function updateUI() {
-  document.getElementById('ui-day').innerText = state.days;
-  document.getElementById('ui-diamonds').innerText = state.diamonds;
-  document.getElementById('ui-cash').innerText = state.cash;
-  document.getElementById('ui-food').innerText = state.inv.food;
-  document.getElementById('ui-fuel').innerText = state.inv.fuel;
-  document.getElementById('ui-anchor').innerText = state.inv.anchor;
-  document.getElementById('ui-weight').innerText = (state.inv.food * 50) + (state.inv.fuel * 10) + (state.inv.anchor * 20);
-  document.getElementById('ui-loc').innerText = state.current;
-  updateBCAdviceMark();
-}
-
-function updateBoatPosition(id) {
-  const b = document.getElementById('boat-icon');
-  b.style.left = mapData[id].x + '%'; b.style.top = mapData[id].y + '%';
-}
-function drawTrail(f, t) {
-  const svg = document.getElementById('path-svg');
-  const l = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-  l.setAttribute('x1', mapData[f].x + '%'); l.setAttribute('y1', mapData[f].y + '%');
-  l.setAttribute('x2', mapData[t].x + '%'); l.setAttribute('y2', mapData[t].y + '%');
-  l.setAttribute('class', 'trail-line'); svg.appendChild(l);
-}
-
-function openAdminLogin() { document.getElementById('admin-login-modal').classList.remove('hidden'); }
-function closeAdminLogin() { document.getElementById('admin-login-modal').classList.add('hidden'); }
-function handleAdminAuth() {
-  const u = document.getElementById('adm-user').value.trim();
-  const p = document.getElementById('adm-pass').value.trim();
-  if (u === ADMIN_USER && p === ADMIN_PASS) { closeAdminLogin(); openAdminDashboard(); }
-  else alert('Invalid admin credentials');
-}
-async function openAdminDashboard() { await renderAdminDashboard(); document.getElementById('admin-dashboard-modal').classList.remove('hidden'); }
-function closeAdminDashboard() { document.getElementById('admin-dashboard-modal').classList.add('hidden'); }
-async function renderAdminDashboard() {
-  const wrap = document.getElementById('admin-team-list'); wrap.innerHTML = 'Loading...';
-  const { data, error } = await supabaseClient.from('game_saves').select('*').order('team_id', { ascending: true });
-  if (error) { wrap.innerHTML = '<p>Failed to load team data.</p>'; console.error(error); return; }
-  wrap.innerHTML = '';
-  if (!data || data.length === 0) { wrap.innerHTML = '<p>No team data available.</p>'; return; }
-  data.forEach(t => {
-    const card = document.createElement('div'); card.className = 'admin-card';
-    card.innerHTML = `
-      <h3 style="margin-top:0;">Team ${t.team_id} - ${t.team_name || 'Unknown'} / ${t.captain_name || 'Unknown'}</h3>
-      <div><b>Current Position:</b> ${t.current_location}</div>
-      <div><b>Days:</b> ${t.days} | <b>Diamonds:</b> ${t.diamonds} | <b>Cash:</b> ${t.cash}</div>
-      <div><b>Food:</b> ${t.food} | <b>Fuel:</b> ${t.fuel} | <b>Anchor:</b> ${t.anchor}</div>
-      <div class="admin-grid">
-        <input type="number" id="edit-days-${t.team_id}" value="${t.days}" placeholder="Days">
-        <input type="number" id="edit-diamonds-${t.team_id}" value="${t.diamonds}" placeholder="Diamonds">
-        <input type="number" id="edit-cash-${t.team_id}" value="${t.cash}" placeholder="Cash">
-        <input type="number" id="edit-food-${t.team_id}" value="${t.food}" placeholder="Food">
-        <input type="number" id="edit-fuel-${t.team_id}" value="${t.fuel}" placeholder="Fuel">
-        <input type="number" id="edit-anchor-${t.team_id}" value="${t.anchor}" placeholder="Anchor">
-      </div>
-      <div style="margin-top:10px;">
-        <label><b>Override Position:</b></label>
-        <select id="edit-pos-${t.team_id}">${Object.keys(mapData).map(loc => `<option value="${loc}" ${t.current_location === loc ? 'selected' : ''}>${loc}</option>`).join('')}</select>
-      </div>
-      <button onclick="saveAdminOverride('${t.team_id}')" style="background:#8b0000; color:white; margin-top:12px;">Save Override</button>`;
-    wrap.appendChild(card);
-  });
-}
-async function saveAdminOverride(teamId) {
-  const payload = {
-    team_id: teamId,
-    days: parseInt(document.getElementById(`edit-days-${teamId}`).value) || 0,
-    diamonds: parseInt(document.getElementById(`edit-diamonds-${teamId}`).value) || 0,
-    cash: parseInt(document.getElementById(`edit-cash-${teamId}`).value) || 0,
-    food: parseInt(document.getElementById(`edit-food-${teamId}`).value) || 0,
-    fuel: parseInt(document.getElementById(`edit-fuel-${teamId}`).value) || 0,
-    anchor: parseInt(document.getElementById(`edit-anchor-${teamId}`).value) || 0,
-    current_location: document.getElementById(`edit-pos-${teamId}`).value
-  };
-  const { error } = await supabaseClient.from('game_saves').upsert(payload, { onConflict: 'team_id' });
-  if (error) { alert('Failed to save override'); console.error(error); return; }
-  alert('Team updated successfully');
-  if (currentTeamId === teamId) {
-    const data = await loadTeamFromDatabase(teamId);
-    if (data) {
-      applyDbRowToState(data);
-      document.getElementById('ui-full-name').innerText = `${state.teamName} - ${state.captainName}`;
-      updateUI(); updateBoatPosition(state.current);
+      renderNodes();
+      updateBoatPosition('BC');
+      updateUI();
+      updateBCAdviceMark();
+      await saveGameToDatabase();
+      openShop('B');
     }
-  }
-  renderAdminDashboard();
-}
-</script>
+
+    function renderNodes() {
+      const wrapper = document.getElementById('map-wrapper');
+      document.querySelectorAll('.node').forEach(n => n.remove());
+
+      for (let id in mapData) {
+        const node = document.createElement('div');
+        node.className = 'node';
+        node.id = 'node-' + id;
+        node.style.left = mapData[id].x + '%';
+        node.style.top = mapData[id].y + '%';
+        node.innerText = id;
+        node.onclick = () => previewMove(id);
+        wrapper.appendChild(node);
+      }
+    }
+
+    function getLocationWeather(nodeId) {
+      if (!state.locationWeatherByDay[nodeId]) {
+        state.locationWeatherByDay[nodeId] = Math.random() * 100;
+      }
+      return state.locationWeatherByDay[nodeId];
+    }
+
+    function resetAllLocationWeatherForNextDay() {
+      state.locationWeatherByDay = {};
+    }
+
+    function getCostForWeather(roll, isWaterLocation) {
+      if (roll <= 60) {
+        return { w: 'Rainy', c: { food: isWaterLocation ? 0 : 1, fuel: 1, anchor: 0 } };
+      }
+
+      if (roll <= 75) {
+        return state.inv.anchor > 0
+          ? { w: 'Flood', c: { food: isWaterLocation ? 0 : 1, fuel: 2, anchor: 1 } }
+          : { w: 'Flood', c: { food: isWaterLocation ? 0 : 2, fuel: 5, anchor: 0 } };
+      }
+
+      if (roll <= 90) {
+        return { w: 'Sunny', c: { food: isWaterLocation ? 0 : 2, fuel: 1, anchor: 0 } };
+      }
+
+      return state.inv.anchor > 0
+        ? { w: 'Sunny-Flood', c: { food: isWaterLocation ? 0 : 2, fuel: 2, anchor: 1 } }
+        : { w: 'Sunny-Flood', c: { food: isWaterLocation ? 0 : 3, fuel: 5, anchor: 0 } };
+    }
+
+    function previewMove(id) {
+      if (state.gameEnded) return;
+
+      if (!mapData[state.current].adj.includes(id)) {
+        alert('Areas are not connected!');
+        return;
+      }
+
+      if (state.days <= 0) {
+        alert('No days left!');
+        return;
+      }
+
+      document.querySelectorAll('.node').forEach(n => {
+        n.classList.remove('selected', 'locked-preview');
+      });
+
+      document.getElementById('node-' + id).classList.add('selected', 'locked-preview');
+      state.target = id;
+
+      const isWaterLocation = mapData[id].type === 'W';
+      const { w, c } = getCostForWeather(getLocationWeather(id), isWaterLocation);
+
+      state.pendingWeather = w;
+      state.pendingCost = c;
+
+      document.getElementById('intel-area').classList.remove('hidden');
+      document.getElementById('intel-details').innerHTML =
+        `Target: <b>${id}</b><br>Forecast: <b>${w}</b><br>Cost: 🥩${c.food} | ⛽${c.fuel} | ⚓${c.anchor}`;
+
+      document.getElementById('confirm-btn').disabled =
+        state.inv.food < c.food || state.inv.fuel < c.fuel || state.inv.anchor < c.anchor;
+    }
+
+    async function executeMovement() {
+      if (state.gameEnded || !state.target || !state.pendingCost) return;
+
+      if (
+        state.inv.food < state.pendingCost.food ||
+        state.inv.fuel < state.pendingCost.fuel ||
+        state.inv.anchor < state.pendingCost.anchor
+      ) {
+        alert('Not enough supplies!');
+        return;
+      }
+
+      state.inv.food -= state.pendingCost.food;
+      state.inv.fuel -= state.pendingCost.fuel;
+      state.inv.anchor -= state.pendingCost.anchor;
+      state.days -= 1;
+
+      drawTrail(state.current, state.target);
+      state.current = state.target;
+      updateBoatPosition(state.current);
+
+      document.querySelectorAll('.node').forEach(n => {
+        n.classList.remove('selected', 'locked-preview');
+      });
+
+      document.getElementById('intel-area').classList.add('hidden');
+
+      state.target = null;
+      state.pendingCost = null;
+      state.pendingWeather = null;
+
+      resetAllLocationWeatherForNextDay();
+      updateUI();
+      updateBCAdviceMark();
+      handleArrival();
+      checkGameState();
+      await saveGameToDatabase();
+    }
+
+    function handleArrival() {
+      if (state.gameEnded) return;
+
+      const type = mapData[state.current].type;
+      if (type === 'H') openShop('H');
+      if (type === 'D') {
+        resetMiningModal();
+        document.getElementById('mining-modal').classList.remove('hidden');
+      }
+    }
+
+    function openShop(type) {
+      const old = document.getElementById('shop-modal');
+      if (old) old.remove();
+
+      const modal = document.createElement('div');
+      modal.className = 'modal-overlay';
+      modal.id = 'shop-modal';
+
+      const fP = type === 'H' ? 100 : 50;
+      const fuP = type === 'H' ? 40 : 20;
+
+      modal.innerHTML = `
+        <div class="shop-card">
+          <h2>MARKET: ${type === 'H' ? 'HIGHLAND' : 'BASE CAMP'}</h2>
+          <p>Gold Available: <b>${state.cash} BR</b></p>
+          <table>
+            <tr><td>🥩 Food (${fP} BR)</td><td><input type="number" min="0" id="buy-f" value="${state.inv.food}" oninput="calcShop(${fP}, ${fuP})"></td></tr>
+            <tr><td>⛽ Fuel (${fuP} BR)</td><td><input type="number" min="0" id="buy-fu" value="${state.inv.fuel}" oninput="calcShop(${fP}, ${fuP})"></td></tr>
+            <tr><td>⚓ Anchor (100 BR)</td><td><input type="number" min="0" id="buy-a" value="${state.inv.anchor}" oninput="calcShop(${fP}, ${fuP})"></td></tr>
+          </table>
+          <p id="sum" style="font-weight:bold"></p>
+          <p id="warn" style="color:red; display:none;">Over budget / over capacity / invalid sale</p>
+          <button id="s-btn" onclick="confShop(${fP}, ${fuP})" style="background:green; color:white">SAVE MANIFEST</button>
+          <button onclick="closeShop()" style="background:#333; color:white;">Close</button>
+        </div>
+      `;
+
+      document.body.appendChild(modal);
+      calcShop(fP, fuP);
+    }
+
+    function closeShop() {
+      const modal = document.getElementById('shop-modal');
+      if (modal) modal.remove();
+    }
+
+    function calcShop(fP, fuP) {
+      const f = parseInt(document.getElementById('buy-f').value) || 0;
+      const fu = parseInt(document.getElementById('buy-fu').value) || 0;
+      const a = parseInt(document.getElementById('buy-a').value) || 0;
+
+      const cost = ((f - state.inv.food) * fP) + ((fu - state.inv.fuel) * fuP) + ((a - state.inv.anchor) * 100);
+      const wt = (f * 50) + (fu * 10) + (a * 20);
+
+      document.getElementById('sum').innerText =
+        `Gold Required: ${cost} BR | Weight: ${wt}kg | Balance: ${state.cash - cost} BR`;
+
+      const over = cost < 0 || state.cash < cost || wt > MAX_WEIGHT;
+      document.getElementById('warn').style.display = over ? 'block' : 'none';
+      document.getElementById('s-btn').disabled = over;
+    }
+
+    async function confShop(fP, fuP) {
+      const f = parseInt(document.getElementById('buy-f').value) || 0;
+      const fu = parseInt(document.getElementById('buy-fu').value) || 0;
+      const a = parseInt(document.getElementById('buy-a').value) || 0;
+
+      const cost = ((f - state.inv.food) * fP) + ((fu - state.inv.fuel) * fuP) + ((a - state.inv.anchor) * 100);
+      const wt = (f * 50) + (fu * 10) + (a * 20);
+
+      if (cost < 0) return alert('Selling is not allowed');
+      if (state.cash < cost) return alert('Not enough gold');
+      if (wt > MAX_WEIGHT) return alert('Weight limit exceeded');
+
+      state.cash -= cost;
+      state.inv = { food: f, fuel: fu, anchor: a };
+
+      closeShop();
+      updateUI();
+      await saveGameToDatabase();
+    }
+
+    function previewMining() {
+      const days = parseInt(document.getElementById('mining-days-input').value);
+
+      if (days <= 0 || days >= state.days) {
+        alert('Invalid Days count');
+        return;
+      }
+
+      let tF = 0, tFu = 0, tA = 0;
+      let html = '';
+      let tempInv = { ...state.inv };
+      let ok = true;
+
+      for (let d = 1; d <= days; d++) {
+        const { w, c } = getCostForWeather(Math.random() * 100, false);
+
+        tF += c.food;
+        tFu += c.fuel;
+        tA += c.anchor;
+
+        html += `<tr><td>${d}</td><td>${w}</td><td>🥩${c.food} ⛽${c.fuel} ⚓${c.anchor}</td></tr>`;
+
+        if (tempInv.food < c.food || tempInv.fuel < c.fuel || tempInv.anchor < c.anchor) {
+          ok = false;
+        }
+
+        tempInv.food -= c.food;
+        tempInv.fuel -= c.fuel;
+        tempInv.anchor -= c.anchor;
+      }
+
+      document.getElementById('mining-log-body').innerHTML = html;
+      document.getElementById('mining-total-cost').innerHTML =
+        `Total cost: 🥩${tF} Food, ⛽${tFu} Fuel, ⚓${tA} Anchor<br>Diamonds: 💎${days * 5}`;
+
+      document.getElementById('mining-confirm-btn').disabled = !ok;
+
+      if (!ok) {
+        document.getElementById('mining-total-cost').innerHTML += `<br><span style="color:red">INSUFFICIENT SUPPLIES!</span>`;
+      }
+
+      pendingMin = { days, tF, tFu, tA };
+      document.getElementById('mining-step-1').classList.add('hidden');
+      document.getElementById('mining-step-2').classList.remove('hidden');
+    }
+
+    async function confirmMining() {
+      if (state.gameEnded || !pendingMin) return;
+
+      state.inv.food -= pendingMin.tF;
+      state.inv.fuel -= pendingMin.tFu;
+      state.inv.anchor -= pendingMin.tA;
+      state.days -= pendingMin.days;
+      state.diamonds += (pendingMin.days * 5);
+
+      document.getElementById('mining-modal').classList.add('hidden');
+      resetMiningModal();
+      updateUI();
+      checkGameState();
+      await saveGameToDatabase();
+    }
+
+    function editMiningDays() {
+      document.getElementById('mining-step-1').classList.remove('hidden');
+      document.getElementById('mining-step-2').classList.add('hidden');
+    }
+
+    function resetMiningModal() {
+      pendingMin = null;
+      document.getElementById('mining-days-input').value = 1;
+      document.getElementById('mining-log-body').innerHTML = '';
+      document.getElementById('mining-total-cost').innerHTML = '';
+      document.getElementById('mining-step-1').classList.remove('hidden');
+      document.getElementById('mining-step-2').classList.add('hidden');
+    }
+
+    function updateBCAdviceMark() {
+      const mark = document.getElementById('bc-advice-mark');
+      if (!mark) return;
+
+      const bc = mapData['BC'];
+      mark.style.left = (bc.x + 3) + '%';
+      mark.style.top = (bc.y - 7) + '%';
+
+      if (state.current === 'BC' && !state.gameEnded) {
+        mark.style.display = 'flex';
+      } else {
+        mark.style.display = 'none';
+        closeClueModal();
+      }
+    }
+
+    function openClueModal() {
+      if (state.current !== 'BC' || state.gameEnded) return;
+
+      document.getElementById('revealed-clues-box').classList.add('hidden');
+      document.getElementById('revealed-clues-list').innerHTML = '';
+      renderClueOptions();
+      document.getElementById('clue-modal').classList.remove('hidden');
+    }
+
+    function closeClueModal() {
+      document.getElementById('clue-modal').classList.add('hidden');
+      document.getElementById('revealed-clues-box').classList.add('hidden');
+      document.getElementById('revealed-clues-list').innerHTML = '';
+    }
+
+    function renderClueOptions() {
+      const wrap = document.getElementById('clue-options-wrap');
+      wrap.innerHTML = '';
+
+      clueList.forEach(clue => {
+        const alreadyTaken = state.takenClues.includes(clue.id);
+        const item = document.createElement('label');
+        item.className = 'clue-option' + (alreadyTaken ? ' disabled' : '');
+
+        item.innerHTML = `
+          <div class="clue-option-title">
+            <input type="checkbox" class="clue-check" value="${clue.id}" ${alreadyTaken ? 'disabled' : ''}>
+            ${clue.number}
+          </div>
+          <div class="clue-option-text">${alreadyTaken ? 'Already used' : 'Mystery clue number'}</div>
+        `;
+
+        wrap.appendChild(item);
+      });
+
+      document.querySelectorAll('.clue-check').forEach(box => {
+        box.addEventListener('change', updateClueSummary);
+      });
+
+      updateClueSummary();
+    }
+
+    function updateClueSummary() {
+      const selected = [...document.querySelectorAll('.clue-check:checked')].map(x => x.value);
+      const count = selected.length;
+      const note = document.getElementById('clue-note-box');
+
+      document.getElementById('clue-summary-box').innerHTML =
+        `Selected: <b>${count}</b> clue(s) • Days Cost: <b>${count}</b>`;
+
+      if (count === 0) {
+        note.innerText = 'Select at least one clue number to confirm.';
+      } else if (state.days <= count) {
+        note.innerText = 'Not enough days remaining for this selection.';
+      } else {
+        note.innerText = '';
+      }
+    }
+
+    async function confirmClues() {
+      if (state.current !== 'BC' || state.gameEnded) return;
+
+      const selectedIds = [...document.querySelectorAll('.clue-check:checked')].map(x => x.value);
+      const costDays = selectedIds.length;
+
+      if (costDays === 0) return alert('Please select at least one clue number.');
+      if (state.days <= costDays) return alert('Not enough days remaining.');
+
+      const selectedClues = clueList.filter(clue => selectedIds.includes(clue.id));
+
+      selectedIds.forEach(id => {
+        if (!state.takenClues.includes(id)) {
+          state.takenClues.push(id);
+        }
+      });
+
+      state.days -= costDays;
+      updateUI();
+
+      const list = document.getElementById('revealed-clues-list');
+      list.innerHTML = '';
+
+      selectedClues.forEach(clue => {
+        const div = document.createElement('div');
+        div.className = 'revealed-clue-item';
+        div.innerHTML = `<b>${clue.number}</b> — ${clue.text}`;
+        list.appendChild(div);
+      });
+
+      document.getElementById('revealed-clues-box').classList.remove('hidden');
+      renderClueOptions();
+      checkGameState();
+      await saveGameToDatabase();
+    }
+
+    function checkGameState() {
+      if (state.gameEnded) return;
+
+      if (state.current === 'BC' && state.diamonds > 0) {
+        state.gameEnded = true;
+        closeClueModal();
+        setTimeout(() => {
+          alert(`VICTORY!\n\nYou returned to Base Camp safely.\nDiamonds Collected: ${state.diamonds}\nGold Remaining: ${state.cash} BR`);
+        }, 150);
+        return;
+      }
+
+      if (state.days <= 0) {
+        state.gameEnded = true;
+        closeClueModal();
+        setTimeout(() => {
+          alert(`GAME OVER!\n\nYou ran out of days.\nLocation: ${state.current}\nDiamonds Collected: ${state.diamonds}\nGold Remaining: ${state.cash} BR`);
+        }, 150);
+      }
+    }
+
+    function updateUI() {
+      document.getElementById('ui-day').innerText = state.days;
+      document.getElementById('ui-diamonds').innerText = state.diamonds;
+      document.getElementById('ui-cash').innerText = state.cash;
+      document.getElementById('ui-food').innerText = state.inv.food;
+      document.getElementById('ui-fuel').innerText = state.inv.fuel;
+      document.getElementById('ui-anchor').innerText = state.inv.anchor;
+      document.getElementById('ui-weight').innerText =
+        (state.inv.food * 50) + (state.inv.fuel * 10) + (state.inv.anchor * 20);
+      document.getElementById('ui-loc').innerText = state.current;
+
+      updateBCAdviceMark();
+    }
+
+    function updateBoatPosition(id) {
+      const b = document.getElementById('boat-icon');
+      b.style.left = mapData[id].x + '%';
+      b.style.top = mapData[id].y + '%';
+    }
+
+    function drawTrail(f, t) {
+      const svg = document.getElementById('path-svg');
+      const l = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      l.setAttribute('x1', mapData[f].x + '%');
+      l.setAttribute('y1', mapData[f].y + '%');
+      l.setAttribute('x2', mapData[t].x + '%');
+      l.setAttribute('y2', mapData[t].y + '%');
+      l.setAttribute('class', 'trail-line');
+      svg.appendChild(l);
+    }
+
+    function openAdminLogin() {
+      document.getElementById('admin-login-modal').classList.remove('hidden');
+    }
+
+    function closeAdminLogin() {
+      document.getElementById('admin-login-modal').classList.add('hidden');
+    }
+
+    function handleAdminAuth() {
+      const u = document.getElementById('adm-user').value.trim();
+      const p = document.getElementById('adm-pass').value.trim();
+
+      if (u === ADMIN_USER && p === ADMIN_PASS) {
+        closeAdminLogin();
+        openAdminDashboard();
+      } else {
+        alert('Invalid admin credentials');
+      }
+    }
+
+    async function openAdminDashboard() {
+      await renderAdminDashboard();
+      document.getElementById('admin-dashboard-modal').classList.remove('hidden');
+    }
+
+    function closeAdminDashboard() {
+      document.getElementById('admin-dashboard-modal').classList.add('hidden');
+    }
+
+    async function renderAdminDashboard() {
+      const wrap = document.getElementById('admin-team-list');
+      wrap.innerHTML = 'Loading...';
+
+      const { data, error } = await supabaseClient
+        .from('game_saves')
+        .select('*')
+        .order('team_id', { ascending: true });
+
+      if (error) {
+        wrap.innerHTML = '<p>Failed to load team data.</p>';
+        console.error(error);
+        return;
+      }
+
+      wrap.innerHTML = '';
+
+      if (!data || data.length === 0) {
+        wrap.innerHTML = '<p>No team data available.</p>';
+        return;
+      }
+
+      data.forEach(t => {
+        const card = document.createElement('div');
+        card.className = 'admin-card';
+
+        card.innerHTML = `
+          <h3 style="margin-top:0;">Team ${t.team_id} - ${t.team_name || 'Unknown'} / ${t.captain_name || 'Unknown'}</h3>
+          <div><b>Current Position:</b> ${t.current_location}</div>
+          <div><b>Days:</b> ${t.days} | <b>Diamonds:</b> ${t.diamonds} | <b>Cash:</b> ${t.cash}</div>
+          <div><b>Food:</b> ${t.food} | <b>Fuel:</b> ${t.fuel} | <b>Anchor:</b> ${t.anchor}</div>
+
+          <div class="admin-grid">
+            <input type="number" id="edit-days-${t.team_id}" value="${t.days}" placeholder="Days">
+            <input type="number" id="edit-diamonds-${t.team_id}" value="${t.diamonds}" placeholder="Diamonds">
+            <input type="number" id="edit-cash-${t.team_id}" value="${t.cash}" placeholder="Cash">
+            <input type="number" id="edit-food-${t.team_id}" value="${t.food}" placeholder="Food">
+            <input type="number" id="edit-fuel-${t.team_id}" value="${t.fuel}" placeholder="Fuel">
+            <input type="number" id="edit-anchor-${t.team_id}" value="${t.anchor}" placeholder="Anchor">
+          </div>
+
+          <div style="margin-top:10px;">
+            <label><b>Override Position:</b></label>
+            <select id="edit-pos-${t.team_id}">
+              ${Object.keys(mapData).map(loc =>
+                `<option value="${loc}" ${t.current_location === loc ? 'selected' : ''}>${loc}</option>`
+              ).join('')}
+            </select>
+          </div>
+
+          <button onclick="saveAdminOverride('${t.team_id}')" style="background:#8b0000; color:white; margin-top:12px;">Save Override</button>
+        `;
+
+        wrap.appendChild(card);
+      });
+    }
+
+    async function saveAdminOverride(teamId) {
+      const payload = {
+        team_id: teamId,
+        days: parseInt(document.getElementById(`edit-days-${teamId}`).value) || 0,
+        diamonds: parseInt(document.getElementById(`edit-diamonds-${teamId}`).value) || 0,
+        cash: parseInt(document.getElementById(`edit-cash-${teamId}`).value) || 0,
+        food: parseInt(document.getElementById(`edit-food-${teamId}`).value) || 0,
+        fuel: parseInt(document.getElementById(`edit-fuel-${teamId}`).value) || 0,
+        anchor: parseInt(document.getElementById(`edit-anchor-${teamId}`).value) || 0,
+        current_location: document.getElementById(`edit-pos-${teamId}`).value
+      };
+
+      const { error } = await supabaseClient
+        .from('game_saves')
+        .upsert(payload, { onConflict: 'team_id' });
+
+      if (error) {
+        alert('Failed to save override');
+        console.error(error);
+        return;
+      }
+
+      alert('Team updated successfully');
+
+      if (currentTeamId === teamId) {
+        const data = await loadTeamFromDatabase(teamId);
+        if (data) {
+          applyDbRowToState(data);
+          document.getElementById('ui-full-name').innerText = `${state.teamName} - ${state.captainName}`;
+          updateUI();
+          updateBoatPosition(state.current);
+        }
+      }
+
+      renderAdminDashboard();
+    }
+  </script>
 </body>
 </html>
