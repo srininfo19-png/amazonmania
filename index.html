@@ -580,7 +580,7 @@
       'DM':  { x: 15, y: 15, type: 'D', adj: ['R15', 'R14'] },
       'H1':  { x: 70, y: 20, type: 'H', adj: ['R2', 'R3', 'R4', 'W1', 'R7'] },
       'H2':  { x: 58, y: 82, type: 'H', adj: ['R6', 'R5', 'R4', 'R1'] },
-      'H3':  { x: 43, y: 92, type: 'H', adj: ['H4', 'R9', 'R5', 'H2'] },
+      'H3':  { x: 43, y: 92, type: 'H', adj: ['H4', 'R6', 'H2'] },
       'H4':  { x: 33, y: 73, type: 'H', adj: ['H5', 'R11', 'R9', 'R6', 'H3'] },
       'H5':  { x: 12, y: 65, type: 'H', adj: ['R13', 'AN', 'R11', 'H4'] },
       'R1':  { x: 74, y: 72, adj: ['H2', 'R5', 'R4', 'R3', 'R2', 'BC'] },
@@ -1344,7 +1344,20 @@
         const data = await loadTeamFromDatabase(teamId);
         if (data) {
           applyDbRowToState(data);
+
+          state.target = null;
+          state.pendingCost = null;
+          state.pendingWeather = null;
+          state.locationWeatherByDay = {};
+
+          document.querySelectorAll('.node').forEach(n => {
+            n.classList.remove('selected', 'locked-preview');
+          });
+
+          document.getElementById('intel-area').classList.add('hidden');
           document.getElementById('ui-full-name').innerText = `${state.teamName} - ${state.captainName}`;
+
+          renderNodes();
           updateUI();
           updateBoatPosition(state.current);
         }
