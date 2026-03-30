@@ -146,7 +146,7 @@
       <h1>Login</h1>
       <input type="text" id="user-in" placeholder="ID (1-6)">
       <input type="password" id="pass-in" placeholder="Password">
-      <button onclick="handleLogin()" class="btn-cancel">IDENTIFY CREW</button>
+      <button onclick="handleLogin()" class="btn-cancel">LOGIN</button>
     </div>
   </div>
 
@@ -164,7 +164,7 @@
       <h2 id="ui-full-name">----</h2>
       <table class="stat-table">
         <tr><th>Day</th><td><span id="ui-day">22</span>/22</td></tr>
-        <tr><th>Gold</th><td><span id="ui-cash">2000</span> BR</td></tr>
+        <tr><th>BR</th><td><span id="ui-cash">2000</span> BR</td></tr>
         <tr><th>Diamonds</th><td><span id="ui-diamonds" style="color:var(--water-blue)">0</span></td></tr>
         <tr><th>Loc</th><td><span id="ui-loc">BC</span></td></tr>
       </table>
@@ -583,8 +583,8 @@ function resetMiningModal() {
 function updateBCAdviceMark() {
   const mark = document.getElementById('bc-advice-mark'); if (!mark) return;
   const bc = mapData['BC'];
-  mark.style.left = (bc.x - 10) + '%';
-      mark.style.top = (bc.y + 10) + '%';
+  mark.style.left = (bc.x - 12) + '%';
+  mark.style.top = (bc.y + 9) + '%';
   if (state.current === 'BC' && !state.gameEnded) mark.style.display = 'flex';
   else { mark.style.display = 'none'; closeClueModal(); }
 }
