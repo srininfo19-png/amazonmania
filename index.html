@@ -69,12 +69,29 @@
       position: fixed; bottom: 15px; right: 15px; z-index: 9999; width: 45px; height: 45px; background: rgba(0,0,0,0.7);
       border: 2px solid var(--pirate-gold); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--pirate-gold); cursor: pointer;
     }
+
+    /* UPDATED: Mystery clue icon fixed to left-bottom corner of map */
     .bc-advice-mark {
-      position: absolute; width: 42px; height: 42px; border-radius: 50%; background: #ffcc00; color: #111; font-weight: bold; font-size: 26px; display: none;
-      align-items: center; justify-content: center; transform: translate(-50%, -50%); z-index: 20; cursor: pointer; border: 3px solid #fff3a0;
+      position: absolute;
+      left: 18px;
+      bottom: 18px;
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: #ffcc00;
+      color: #111;
+      font-weight: bold;
+      font-size: 32px;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 20;
+      cursor: pointer;
+      border: 4px solid #fff3a0;
       box-shadow: 0 0 18px rgba(255,204,0,.75);
     }
-    .bc-advice-mark:hover { transform: translate(-50%, -50%) scale(1.08); }
+    .bc-advice-mark:hover { transform: scale(1.08); }
+
     .clue-modal-card {
       width: 820px; max-width: 95%; min-height: 500px; border-radius: 18px; overflow: hidden; position: relative;
       background: linear-gradient(rgba(0,0,0,.55), rgba(0,0,0,.72)), url('clue-bg.png') center/cover no-repeat;
@@ -580,14 +597,20 @@ function resetMiningModal() {
   document.getElementById('mining-step-2').classList.add('hidden');
 }
 
+/* UPDATED: Mystery clue now only shows when current location is BC.
+   Position is handled fully by CSS, so no BC coordinate placement here. */
 function updateBCAdviceMark() {
-  const mark = document.getElementById('bc-advice-mark'); if (!mark) return;
-  const bc = mapData['BC'];
-  mark.style.left = (bc.x - 12) + '%';
-  mark.style.top = (bc.y + 9) + '%';
-  if (state.current === 'BC' && !state.gameEnded) mark.style.display = 'flex';
-  else { mark.style.display = 'none'; closeClueModal(); }
+  const mark = document.getElementById('bc-advice-mark');
+  if (!mark) return;
+
+  if (state.current === 'BC' && !state.gameEnded) {
+    mark.style.display = 'flex';
+  } else {
+    mark.style.display = 'none';
+    closeClueModal();
+  }
 }
+
 function openClueModal() {
   if (state.current !== 'BC' || state.gameEnded) return;
   document.getElementById('revealed-clues-box').classList.add('hidden');
