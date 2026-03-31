@@ -70,35 +70,62 @@
       border: 2px solid var(--pirate-gold); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--pirate-gold); cursor: pointer;
     }
 
-    /* UPDATED: Mystery clue icon fixed to left-bottom corner of map */
     .bc-advice-mark {
       position: absolute;
       left: 18px;
       bottom: 18px;
-      width: 56px;
-      height: 56px;
-      border-radius: 50%;
-      background: #ffcc00;
-      color: #111;
-      font-weight: bold;
-      font-size: 32px;
+      width: 2cm;
+      height: 2cm;
       display: none;
       align-items: center;
       justify-content: center;
       z-index: 20;
       cursor: pointer;
-      border: 4px solid #fff3a0;
+      border-radius: 50%;
+      border: 3px solid #fff3a0;
       box-shadow: 0 0 18px rgba(255,204,0,.75);
+      background: rgba(255, 204, 0, 0.12);
+      overflow: hidden;
+      padding: 0;
+    }
+    .bc-advice-mark img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      border-radius: 50%;
     }
     .bc-advice-mark:hover { transform: scale(1.08); }
 
-    .clue-modal-card {
+    .rulebook-btn {
+      position: absolute;
+      top: 18px;
+      right: 18px;
+      z-index: 21;
+      background: rgba(20, 15, 5, 0.9);
+      color: var(--pirate-gold);
+      border: 2px solid var(--pirate-gold);
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      width: auto;
+      margin-top: 0;
+      box-shadow: 0 0 16px rgba(0,0,0,.35);
+    }
+    .rulebook-btn:hover { transform: scale(1.03); }
+
+    .clue-modal-card,
+    .rulebook-modal-card {
       width: 820px; max-width: 95%; min-height: 500px; border-radius: 18px; overflow: hidden; position: relative;
       background: linear-gradient(rgba(0,0,0,.55), rgba(0,0,0,.72)), url('clue-bg.png') center/cover no-repeat;
       box-shadow: 0 0 30px rgba(0,0,0,.65); border: 3px solid var(--pirate-gold); color: white;
     }
-    .clue-modal-inner { padding: 24px; }
-    .clue-title { font-size: 30px; font-weight: bold; color: var(--pirate-gold); margin-bottom: 10px; }
+    .clue-modal-inner,
+    .rulebook-modal-inner { padding: 24px; }
+    .clue-title,
+    .rulebook-title { font-size: 30px; font-weight: bold; color: var(--pirate-gold); margin-bottom: 10px; }
     .clue-sub { font-size: 15px; margin-bottom: 18px; color: #f5e7b8; }
     .clue-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 18px 0; }
     .clue-option {
@@ -122,6 +149,30 @@
     .admin-card { border: 2px solid #c9a400; border-radius: 12px; padding: 14px; margin-bottom: 14px; background: rgba(0,0,0,.04); text-align: left; }
     .admin-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin-top: 12px; }
     .save-choice-actions { display: grid; gap: 10px; }
+
+    .rulebook-content {
+      max-height: 70vh;
+      overflow-y: auto;
+      background: rgba(0,0,0,.48);
+      border: 1px solid rgba(255,215,0,.35);
+      border-radius: 14px;
+      padding: 18px 22px;
+      line-height: 1.65;
+      font-size: 18px;
+      color: #fff8dc;
+    }
+    .rulebook-section-title {
+      color: var(--pirate-gold);
+      font-size: 22px;
+      margin: 16px 0 6px;
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+    .rulebook-content ul {
+      margin: 8px 0 14px 22px;
+      padding: 0;
+    }
+    .rulebook-content li { margin-bottom: 6px; }
   </style>
 </head>
 <body>
@@ -202,7 +253,10 @@
       <img src="map.png" class="main-map-img" alt="Map">
       <svg id="path-svg"></svg>
       <img src="boat.png" id="boat-icon" class="boat-icon" alt="Boat">
-      <div id="bc-advice-mark" class="bc-advice-mark" title="Get Mystery Clue" onclick="openClueModal()">!</div>
+      <button id="rulebook-btn" class="rulebook-btn" onclick="openRulebookModal()">Rule Book</button>
+      <div id="bc-advice-mark" class="bc-advice-mark" title="Get Mystery Clue" onclick="openClueModal()">
+        <img src="pirate.png" alt="Mystery Clue Logo">
+      </div>
     </main>
   </div>
 
@@ -248,8 +302,103 @@
     </div>
   </div>
 
+  <div id="rulebook-modal" class="modal-overlay hidden">
+    <div class="rulebook-modal-card">
+      <div class="rulebook-modal-inner">
+        <div class="rulebook-title">ADAMAS QUEST RULE BOOK</div>
+        <div class="rulebook-content">
+          <div class="rulebook-section-title">OBJECTIVE</div>
+          <ul>
+            <li>Collect maximum diamonds</li>
+            <li>Return safely to Base Camp</li>
+            <li>Win = More diamonds + Less time</li>
+          </ul>
+
+          <div class="rulebook-section-title">👥 TEAM</div>
+          <ul>
+            <li>Work as a team</li>
+            <li>Decide roles (Captain, Planner, Navigator)</li>
+          </ul>
+
+          <div class="rulebook-section-title">⏳ LIMITS</div>
+          <ul>
+            <li>Total: 22 Days</li>
+            <li>Each wrong move = time loss</li>
+          </ul>
+
+          <div class="rulebook-section-title">💰 START</div>
+          <ul>
+            <li>Money: 2000 BR</li>
+            <li>Boat capacity: 1000 kg max</li>
+          </ul>
+
+          <div class="rulebook-section-title">💎 DIAMONDS</div>
+          <ul>
+            <li>Max 5 diamonds per day</li>
+          </ul>
+
+          <div class="rulebook-section-title">🛒 RESOURCE COST</div>
+          <ul>
+            <li><b>Food &amp; Water</b></li>
+            <li>Weight: 50 kg / kit</li>
+            <li>Base Camp: BR 50</li>
+            <li>Highlands: BR 100</li>
+            <li>Fresh Water: FREE</li>
+          </ul>
+          <ul>
+            <li><b>Fuel</b></li>
+            <li>Weight: 10 kg / gallon</li>
+            <li>Base Camp: BR 20</li>
+            <li>Highlands: BR 40</li>
+          </ul>
+          <ul>
+            <li><b>Anchor (Flood use)</b></li>
+            <li>Weight: 20 kg</li>
+            <li>Base Camp: BR 100</li>
+          </ul>
+
+          <div class="rulebook-section-title">🌧️ WEATHER IMPACT</div>
+          <ul>
+            <li>Rainy → Normal usage</li>
+            <li>Flood → Need Anchor</li>
+            <li>Sunny → Normal usage</li>
+            <li>Sunny + Flood → Extra planning needed</li>
+          </ul>
+
+          <div class="rulebook-section-title">⚠️ SURVIVAL</div>
+          <ul>
+            <li>You lose if:</li>
+            <li>No food / water / fuel</li>
+            <li>Weight &gt; 1000 kg</li>
+          </ul>
+
+          <div class="rulebook-section-title">🚫 RULES</div>
+          <ul>
+            <li>No help from other teams</li>
+            <li>Plan resources smartly</li>
+          </ul>
+
+          <div class="rulebook-section-title">🧠 STRATEGY</div>
+          <ul>
+            <li>Plan route before moving</li>
+            <li>Balance time + resources</li>
+            <li>Don’t just survive → Play to win</li>
+          </ul>
+
+          <div class="rulebook-section-title">🧭 BONUS</div>
+          <ul>
+            <li>Advice at Base Camp</li>
+            <li>Cost: 1 day per advice (Max 4)</li>
+          </ul>
+        </div>
+        <div class="clue-actions">
+          <button class="btn-cancel" onclick="closeRulebookModal()">CLOSE</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
 <script>
-// 1) PUT YOUR SUPABASE VALUES HERE
 const SUPABASE_URL = "https://ztlgapixabpizzinegyb.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp0bGdhcGl4YWJwaXp6aW5lZ3liIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzNDIyNjcsImV4cCI6MjA4OTkxODI2N30.2OUlDdM0Lt8kx1uuCUTTH9JKKCg_ftYqgmtLsUycYac";
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -597,8 +746,6 @@ function resetMiningModal() {
   document.getElementById('mining-step-2').classList.add('hidden');
 }
 
-/* UPDATED: Mystery clue now only shows when current location is BC.
-   Position is handled fully by CSS, so no BC coordinate placement here. */
 function updateBCAdviceMark() {
   const mark = document.getElementById('bc-advice-mark');
   if (!mark) return;
@@ -661,6 +808,13 @@ async function confirmClues() {
   document.getElementById('revealed-clues-box').classList.remove('hidden');
   renderClueOptions(); checkGameState();
   await saveGameToDatabase();
+}
+
+function openRulebookModal() {
+  document.getElementById('rulebook-modal').classList.remove('hidden');
+}
+function closeRulebookModal() {
+  document.getElementById('rulebook-modal').classList.add('hidden');
 }
 
 function checkGameState() {
